@@ -1,43 +1,53 @@
 import { query, queryAll, money } from "./utilities.js";
-import { products } from "../data/products.js";
-import { cart, localStorageCart, calculateCartTotal } from "../data/cart.js";
+import { cart, localStorageCart, calculateCartTotal } from "./cart.js";
 import ProductGrid from "../components/ProductGrid.js";
 
-products.forEach((product) => {
-	query("#products-grid").innerHTML += ProductGrid({ product, money });
-});
+fetch("https://aftabwebdev.github.io/products-api/products-api.json")
+	.then((response) => {
+		return response.ok ? response.json() : console.log("Not Successful!");
+	})
+	.then((data) => getProducts(data))
+	.catch((err) => console.log(err.message));
 
-// select quantity option
-queryAll(".select-quantity").forEach((select) => {
-	for (let i = 1; i <= 20; i++) {
-		select.innerHTML += `<option value="${i}">${i}</option>`;
-	}
-});
-
-// display cart total
-query(".js-cart-quantity").innerHTML = calculateCartTotal();
-
-// add to cart button
-queryAll(".js-add-to-cart-button").forEach((addToCartButton) => {
-	addToCartButton.addEventListener("click", () => {
-		const productId = addToCartButton.dataset.productId;
-		const selectedQuantity = Number(
-			query(`.select-quantity-${productId}`).value
-		);
-
-		let matchingItem;
-		cart.forEach((cartItem) => {
-			productId === cartItem.id && (matchingItem = cartItem);
+function getProducts(products) {
+	products.forEach((product) => {
+		query("#products-grid").innerHTML += ProductGrid({
+			product,
+			money,
 		});
-
-		if (!matchingItem) {
-			cart.push({ id: productId, quantity: selectedQuantity });
-		} else {
-			matchingItem.quantity += selectedQuantity;
-		}
-
-		localStorageCart();
-
-		query(".js-cart-quantity").innerHTML = calculateCartTotal();
 	});
-});
+	// select quantity option
+	queryAll(".select-quantity").forEach((select) => {
+		for (let i = 1; i <= 20; i++) {
+			select.innerHTML += `<option value="${i}">${i}</option>`;
+		}
+	});
+
+	// display cart total
+	query(".js-cart-quantity").innerHTML = calculateCartTotal();
+
+	// add to cart button
+	queryAll(".js-add-to-cart-button").forEach((addToCartButton) => {
+		addToCartButton.addEventListener("click", () => {
+			const productId = addToCartButton.dataset.productId;
+			const selectedQuantity = Number(
+				query(`.select-quantity-${productId}`).value
+			);
+
+			let matchingItem;
+			cart.forEach((cartItem) => {
+				productId === cartItem.id && (matchingItem = cartItem);
+			});
+
+			if (!matchingItem) {
+				cart.push({ id: productId, quantity: selectedQuantity });
+			} else {
+				matchingItem.quantity += selectedQuantity;
+			}
+
+			localStorageCart();
+
+			query(".js-cart-quantity").innerHTML = calculateCartTotal();
+		});
+	});
+}
