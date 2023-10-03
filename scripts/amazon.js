@@ -1,50 +1,43 @@
-let productContainerHTML;
+import { query, queryAll, money } from "./utilities.js";
+import { products } from "../data/products.js";
+import { cart, localStorageCart, calculateCartTotal } from "../data/cart.js";
+import ProductGrid from "../components/ProductGrid.js";
 
-document.querySelector("#products-grid").innerHTML = `
-  <div class="product-container">
-    <div class="product-image-container">
-      <img
-        class="product-image"
-        src="images/products/athletic-cotton-socks-6-pairs.jpg"
-      />
-    </div>
+products.forEach((product) => {
+	query("#products-grid").innerHTML += ProductGrid({ product, money });
+});
 
-    <div class="product-name limit-text-to-2-lines">
-      Black and Gray Athletic Cotton Socks - 6 Pairs
-    </div>
+// select quantity option
+queryAll(".select-quantity").forEach((select) => {
+	for (let i = 1; i <= 20; i++) {
+		select.innerHTML += `<option value="${i}">${i}</option>`;
+	}
+});
 
-    <div class="product-rating-container">
-      <img
-        class="product-rating-stars"
-        src="images/ratings/rating-45.png"
-      />
-      <div class="product-rating-count link-primary">87</div>
-    </div>
+// display cart total
+query(".js-cart-quantity").innerHTML = calculateCartTotal();
 
-    <div class="product-price">$10.90</div>
+// add to cart button
+queryAll(".js-add-to-cart-button").forEach((addToCartButton) => {
+	addToCartButton.addEventListener("click", () => {
+		const productId = addToCartButton.dataset.productId;
+		const selectedQuantity = Number(
+			query(`.select-quantity-${productId}`).value
+		);
 
-    <div class="product-quantity-container">
-      <select>
-        <option selected value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5">5</option>
-        <option value="6">6</option>
-        <option value="7">7</option>
-        <option value="8">8</option>
-        <option value="9">9</option>
-        <option value="10">10</option>
-      </select>
-    </div>
+		let matchingItem;
+		cart.forEach((cartItem) => {
+			productId === cartItem.id && (matchingItem = cartItem);
+		});
 
-    <div class="product-spacer"></div>
+		if (!matchingItem) {
+			cart.push({ id: productId, quantity: selectedQuantity });
+		} else {
+			matchingItem.quantity += selectedQuantity;
+		}
 
-    <div class="added-to-cart">
-      <img src="images/icons/checkmark.png" />
-      Added
-    </div>
+		localStorageCart();
 
-    <button class="add-to-cart-button button-primary">Add to Cart</button>
-  </div>
-`;
+		query(".js-cart-quantity").innerHTML = calculateCartTotal();
+	});
+});
